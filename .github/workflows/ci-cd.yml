@@ -23,6 +23,14 @@ jobs:
         source: "./"  # The source directory (current directory in your repo)
         target: "/home/ubuntu/my-app"  # Target directory on your EC2 instance
 
+    - name: Install PM2 on EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }} "curl -sL https://rpm.nodesource.com/setup_16.x | sudo -E bash - && sudo apt-get install -y nodejs && sudo npm install -g pm2"
+
+    - name: Start app with PM2
+      run: |
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }} "cd /home/ubuntu/my-app && pm2 start app.js --name my-app"  # Start the app with PM2
+
     - name: Restart PM2 application
       uses: appleboy/ssh-action@master  # SSH into EC2 and restart PM2 application
       with:
@@ -31,4 +39,4 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH private key stored in GitHub Secrets
         script: |
           cd /home/ubuntu/my-app  # Navigate to the application directory
-          pm2 reload all  # Restart the PM2 application
+          pm2 reload my-app  # Reload the app with PM2
