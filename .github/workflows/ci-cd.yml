@@ -1,35 +1,34 @@
-name: Deploy to EC2
+name: Node.js CI/CD on Amazon Linux
 
 on:
   push:
-    branches:
-      - main  # Trigger the workflow when code is pushed to the main branch
+    branches: [ master ]
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2  # Checkout the code from the repository
+    - uses: actions/checkout@v2  # Checkout the code from the repo
 
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          printf "%s" "$SSH_PRIVATE_KEY" > ~/.ssh/private.key  # Add the SSH private key to a file
-          chmod 600 ~/.ssh/private.key  # Set the correct permissions for the private key
-          eval $(ssh-agent -s)  # Start the SSH agent
-          ssh-add ~/.ssh/private.key  # Add the private key to the SSH agent
-          ssh -T ubuntu@${{ secrets.EC2_PUBLIC_IP }}
+    - name: Install dependencies
+      run: npm install  # Install Node.js dependencies
 
-      - name: Add EC2 to known hosts
-        run: |
-          mkdir -p ~/.ssh  # Ensure the .ssh directory exists
-          ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts  # Add the EC2 public IP to known hosts
+    - name: Deploy to AWS EC2
+      uses: appleboy/scp-action@master  # Copy files to EC2 instance
+      with:
+        host: ${{ secrets.EC2_PUBLIC_IP }}  # EC2 Public IP from GitHub Secrets
+        username: ubuntu  # Username for your EC2 instance
+        key: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH private key stored in GitHub Secrets
+        source: "./"  # The source directory (current directory in your repo)
+        target: "/home/ubuntu/my-app"  # Target directory on your EC2 instance
 
-      - name: Deploy to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }} 'cd /home/ubuntu/my-app && git pull && npm install && pm2 restart my-app'
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # Pass the private key from secrets
-          EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}  # Pass the EC2 IP address from secrets
+    - name: Restart PM2 application
+      uses: appleboy/ssh-action@master  # SSH into EC2 and restart PM2 application
+      with:
+        host: ${{ secrets.EC2_PUBLIC_IP }}  # EC2 Public IP from GitHub Secrets
+        username: ubuntu  # Username for your EC2 instance
+        key: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH private key stored in GitHub Secrets
+        script: |
+          cd /home/ubuntu/my-app  # Navigate to the application directory
+          pm2 reload all  # Restart the PM2 application
