@@ -44,7 +44,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y awscli  # Install AWS CLI
-
+      - name: Set up SSH
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private.key  # This is your private key
+          chmod 600 private.key
+          eval $(ssh-agent -s)
+          ssh-add private.key
+          
       - name: Deploy to EC2 using AWS CLI
         run: |
           # Configure AWS CLI with the environment variables
@@ -53,7 +59,7 @@ jobs:
           aws configure set region $AWS_DEFAULT_REGION
           
           # SSH into EC2 and run deployment commands
-          ssh -o StrictHostKeyChecking=no ubuntu@your-ec2-ip << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@16.171.144.97 << 'EOF'
             cd /path/to/your/app
             git pull
             npm install
