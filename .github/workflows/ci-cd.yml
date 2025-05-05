@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest  # The operating system for the runner
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2  # Checkout the code
+        uses: actions/checkout@v2  # Checkout the code from the repository
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
@@ -32,13 +32,20 @@ jobs:
     needs: test  # Make sure the tests pass before deploying
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2  # Checkout the code
       - name: Set up SSH
         run: |
+          # Set up SSH private key for secure access to EC2
           echo "$SSH_PRIVATE_KEY" > private.key
           chmod 600 private.key
-          eval $(ssh-agent -s)
-          ssh-add private.key
+          eval $(ssh-agent -s)  # Start the ssh-agent
+          ssh-add private.key  # Add the private key to the agent
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no username@your-ec2-instance-ip 'cd /path/to/your/app && git pull && npm install && npm start'
+          # SSH into EC2 and deploy
+          ssh -o StrictHostKeyChecking=no username@your-ec2-instance-ip << EOF
+            cd /path/to/your/app
+            git pull  # Pull the latest code from GitHub
+            npm install  # Install dependencies
+            npm start  # Start your Node.js app
+          EOF
