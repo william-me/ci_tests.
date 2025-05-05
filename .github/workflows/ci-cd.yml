@@ -46,6 +46,8 @@ jobs:
           chmod 600 private.key
           eval $(ssh-agent -s)
           ssh-add private.key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           
       - name: Deploy to EC2 using AWS CLI
         run: |
