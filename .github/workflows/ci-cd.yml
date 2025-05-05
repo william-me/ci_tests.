@@ -16,7 +16,7 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          printf"%s" "$SSH_PRIVATE_KEY" > ~/.ssh/private.key  # Add the SSH private key to a file
+          printf "%s" "$SSH_PRIVATE_KEY" > ~/.ssh/private.key  # Add the SSH private key to a file
           chmod 600 ~/.ssh/private.key  # Set the correct permissions for the private key
           eval $(ssh-agent -s)  # Start the SSH agent
           ssh-add ~/.ssh/private.key  # Add the private key to the SSH agent
