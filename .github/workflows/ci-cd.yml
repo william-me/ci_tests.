@@ -1,0 +1,44 @@
+name: Node.js CI/CD
+
+# Controls when the workflow will run
+on:
+  push:
+    branches:
+      - main  # Triggers only on the 'main' branch
+  pull_request:
+    branches:
+      - main  # Trigger on pull requests to 'main'
+
+# The jobs to be run
+jobs:
+  # Job 1: Test
+  test:
+    runs-on: ubuntu-latest  # The operating system for the runner
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # Checkout the code
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # Specify Node.js version
+      - name: Install dependencies
+        run: npm install  # Run npm install to set up dependencies
+      - name: Run tests
+        run: npm test  # Run the test script defined in package.json
+
+  # Job 2: Deploy (example for deploying to an AWS EC2 instance)
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test  # Make sure the tests pass before deploying
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up SSH
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private.key
+          chmod 600 private.key
+          eval $(ssh-agent -s)
+          ssh-add private.key
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no username@your-ec2-instance-ip 'cd /path/to/your/app && git pull && npm install && npm start'
