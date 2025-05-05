@@ -57,7 +57,7 @@ jobs:
           aws configure set region $AWS_DEFAULT_REGION
           
           # SSH into EC2 and run deployment commands
-          ssh -o StrictHostKeyChecking=no ubuntu@16.171.144.97 << 'EOF'
+          ssh -v -o StrictHostKeyChecking=no ubuntu@16.171.144.97 << 'EOF'
             cd /home/ubuntu/my-app
             git pull
             npm install
